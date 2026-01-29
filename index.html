@@ -6,6 +6,16 @@
 </head>
 
 <body style="margin:0; background:black;">
+const SpeechRecognition =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (!SpeechRecognition) {
+  speechSynthesis.speak(
+    new SpeechSynthesisUtterance(
+      "This app works best on Android phones using Chrome browser."
+    )
+  );
+}
 
 <script>
 let lastResponse = "";
