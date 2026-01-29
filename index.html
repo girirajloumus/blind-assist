@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Blind Assist MVP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body style="margin:0; background:black;">
+
+<script>
+let lastResponse = "";
+
+function speak(text) {
+  lastResponse = text;
+  const msg = new SpeechSynthesisUtterance(text);
+  msg.rate = 1;
+  speechSynthesis.speak(msg);
+}
+
+function startListening() {
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    speak("Speech recognition not supported on this browser.");
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = "en-US";
+  recognition.start();
+
+  recognition.onresult = function(event) {
+    const command = event.results[0][0].transcript.toLowerCase();
+    handleCommand(command);
+  };
+
+  recognition.onerror = function() {
+    speak("I did not hear anything. Please tap and try again.");
+  };
+}
+
+function handleCommand(command) {
+  if (command.includes("help")) {
+    speak("You can say, what is in front of me, or read this.");
+  }
+  else if (command.includes("repeat")) {
+    speak(lastResponse || "Nothing to repeat.");
+  }
+  else if (
+    command.includes("front") ||
+    command.includes("around") ||
+    command.includes("see")
+  ) {
+    openCamera();
+  }
+  else if (command.includes("read")) {
+    openCamera();
+  }
+  else {
+    speak("I did not understand. Say help to know what I can do.");
+  }
+}
+
+function openCamera() {
+  speak("Camera opening. Hold phone steady.");
+
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => {
+      const video = document.createElement("video");
+      video.srcObject = stream;
+      video.play();
+
+      setTimeout(() => {
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0);
+
+        stream.getTracks().forEach(track => track.stop());
+
+        // DUMMY RESPONSE (AI will be added next)
+        speak("I see a room with objects in front of you.");
+      }, 2000);
+    })
+    .catch(() => {
+      speak("Camera access is required to describe surroundings.");
+    });
+}
+
+document.body.onclick = function () {
+  startListening();
+};
+
+window.onload = function () {
+  speak("Hello. Tap anywhere and speak.");
+};
+</script>
+
+</body>
+</html>
